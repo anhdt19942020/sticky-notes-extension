@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Sticky Notes",
-  "description": "Quick sticky notes that float in Chrome's side panel — always at hand, never in the way.",
-  "version": "1.0.0",
+  "description": "Sticky notes in Chrome's side panel + Stand Reminder — your productivity companion.",
+  "version": "1.1.0",
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
@@ -25,7 +25,10 @@
     "storage",
     "sidePanel",
     "tabs",
-    "activeTab"
+    "activeTab",
+    "idle",
+    "alarms",
+    "notifications"
   ],
   "host_permissions": [
     "<all_urls>"

@@ -63,6 +63,55 @@
         <h1 class="header-title">Sticky Notes</h1>
       </div>
       <div class="header-actions">
+        <!-- Feature Switcher -->
+        <div class="feat-switcher" role="tablist" aria-label="Switch feature">
+          <button
+            class="feat-btn active"
+            data-feature="notes"
+            role="tab"
+            aria-selected="true"
+            title="Sticky Notes"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="4" width="13" height="15" rx="2" />
+              <line x1="6" y1="9" x2="13" y2="9" />
+              <line x1="6" y1="12" x2="13" y2="12" />
+              <line x1="6" y1="15" x2="10" y2="15" />
+              <polygon points="16,3 19,3 19,6" />
+            </svg>
+            Notes
+          </button>
+          <button
+            class="feat-btn"
+            data-feature="move"
+            role="tab"
+            aria-selected="false"
+            title="Stand Reminder"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="4" r="2" />
+              <path d="M12 7v5m0 0-3 4m3-4 3 4" />
+              <path d="M9 11h6" />
+            </svg>
+            Move
+          </button>
+        </div>
+
+        <!-- Theme Toggle -->
         <button
           id="btn-theme"
           class="icon-btn"
@@ -101,6 +150,8 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
           </svg>
         </button>
+
+        <!-- New Note (Notes mode only) -->
         <button
           id="btn-new"
           class="btn-primary"
@@ -122,139 +173,157 @@
       </div>
     </header>
 
-    <!-- ═══════════════ SEARCH ═══════════════ -->
-    <div class="search-wrap">
-      <div class="search-box">
-        <svg
-          class="search-icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-        <input
-          id="search-input"
-          class="search-input"
-          type="text"
-          placeholder="Search notes…"
-          aria-label="Search notes"
-        />
-        <button
-          id="btn-clear-search"
-          class="clear-btn"
-          aria-label="Clear search"
-          style="display: none"
-        >
+    <!-- ═══════════════ NOTES SECTION ═══════════════ -->
+    <div id="notes-section">
+      <!-- SEARCH -->
+      <div class="search-wrap">
+        <div class="search-box">
           <svg
+            class="search-icon"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            id="search-input"
+            class="search-input"
+            type="text"
+            placeholder="Search notes…"
+            aria-label="Search notes"
+          />
+          <button
+            id="btn-clear-search"
+            class="clear-btn"
+            aria-label="Clear search"
+            style="display: none"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- FILTER TABS -->
+      <nav class="tabs" role="tablist" aria-label="Filter notes">
+        <button
+          class="tab active"
+          data-tab="all"
+          role="tab"
+          aria-selected="true"
+        >
+          All
+        </button>
+        <button class="tab" data-tab="page" role="tab" aria-selected="false">
+          This Page
+        </button>
+        <button
+          class="tab"
+          data-tab="favorites"
+          role="tab"
+          aria-selected="false"
+        >
+          Favorites
+        </button>
+        <button class="tab" data-tab="archive" role="tab" aria-selected="false">
+          Archive
+        </button>
+      </nav>
+
+      <!-- NOTES LIST -->
+      <main id="notes-container" class="notes-container" role="main"></main>
+
+      <!-- EMPTY STATE -->
+      <div id="empty-state" class="empty-state" hidden>
+        <svg
+          class="empty-icon"
+          viewBox="0 0 80 80"
+          fill="none"
+          aria-hidden="true"
+        >
+          <rect
+            x="10"
+            y="14"
+            width="44"
+            height="52"
+            rx="6"
+            fill="currentColor"
+            opacity="0.08"
+          />
+          <rect
+            x="14"
+            y="10"
+            width="44"
+            height="52"
+            rx="6"
+            fill="currentColor"
+            opacity="0.12"
+          />
+          <rect
+            x="18"
+            y="6"
+            width="44"
+            height="52"
+            rx="6"
+            fill="currentColor"
+            opacity="0.18"
+          />
+          <line
+            x1="26"
+            y1="24"
+            x2="54"
+            y2="24"
+            stroke="currentColor"
             stroke-width="2.5"
             stroke-linecap="round"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+            opacity="0.5"
+          />
+          <line
+            x1="26"
+            y1="32"
+            x2="54"
+            y2="32"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            opacity="0.5"
+          />
+          <line
+            x1="26"
+            y1="40"
+            x2="42"
+            y2="40"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            opacity="0.5"
+          />
+        </svg>
+        <p id="empty-title" class="empty-title">No notes yet</p>
+        <p id="empty-subtitle" class="empty-subtitle">
+          Click <strong>New</strong> to create your first sticky note
+        </p>
       </div>
     </div>
+    <!-- /#notes-section -->
 
-    <!-- ═══════════════ FILTER TABS ═══════════════ -->
-    <nav class="tabs" role="tablist" aria-label="Filter notes">
-      <button class="tab active" data-tab="all" role="tab" aria-selected="true">
-        All
-      </button>
-      <button class="tab" data-tab="page" role="tab" aria-selected="false">
-        This Page
-      </button>
-      <button class="tab" data-tab="favorites" role="tab" aria-selected="false">
-        Favorites
-      </button>
-      <button class="tab" data-tab="archive" role="tab" aria-selected="false">
-        Archive
-      </button>
-    </nav>
-
-    <!-- ═══════════════ NOTES LIST ═══════════════ -->
-    <main id="notes-container" class="notes-container" role="main">
-      <!-- Notes rendered by JS -->
-    </main>
-
-    <!-- ═══════════════ EMPTY STATE ═══════════════ -->
-    <div id="empty-state" class="empty-state" hidden>
-      <svg
-        class="empty-icon"
-        viewBox="0 0 80 80"
-        fill="none"
-        aria-hidden="true"
-      >
-        <rect
-          x="10"
-          y="14"
-          width="44"
-          height="52"
-          rx="6"
-          fill="currentColor"
-          opacity="0.08"
-        />
-        <rect
-          x="14"
-          y="10"
-          width="44"
-          height="52"
-          rx="6"
-          fill="currentColor"
-          opacity="0.12"
-        />
-        <rect
-          x="18"
-          y="6"
-          width="44"
-          height="52"
-          rx="6"
-          fill="currentColor"
-          opacity="0.18"
-        />
-        <line
-          x1="26"
-          y1="24"
-          x2="54"
-          y2="24"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          opacity="0.5"
-        />
-        <line
-          x1="26"
-          y1="32"
-          x2="54"
-          y2="32"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          opacity="0.5"
-        />
-        <line
-          x1="26"
-          y1="40"
-          x2="42"
-          y2="40"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          opacity="0.5"
-        />
-      </svg>
-      <p id="empty-title" class="empty-title">No notes yet</p>
-      <p id="empty-subtitle" class="empty-subtitle">
-        Click <strong>New</strong> to create your first sticky note
-      </p>
+    <!-- ═══════════════ REMINDER SECTION ═══════════════ -->
+    <div id="reminder-section" class="reminder-section" hidden>
+      <!-- Rendered dynamically by reminder.js -->
+      <div class="reminder-loading">Loading…</div>
     </div>
 
     <!-- ═══════════════ NOTE EDITOR MODAL ═══════════════ -->
@@ -381,7 +450,7 @@
           data-placeholder="Write your note here…"
         ></div>
 
-        <!-- Color picker -->
+        <!-- Color picker + actions -->
         <div class="editor-footer">
           <div class="color-picker" role="group" aria-label="Note color">
             <button
@@ -516,7 +585,7 @@
       </div>
     </div>
 
-    <!-- ═══════════════ FAB ═══════════════ -->
+    <!-- ═══════════════ FAB (Notes only) ═══════════════ -->
     <button id="fab" class="fab" aria-label="Create new note" title="New note">
       <svg
         viewBox="0 0 24 24"
@@ -533,6 +602,9 @@
     <!-- ═══════════════ TOAST ═══════════════ -->
     <div id="toast" class="toast" role="alert" aria-live="polite" hidden></div>
 
+    <!-- ═══════════════ SCRIPTS (order matters) ═══════════════ -->
+    <script src="shared.js"></script>
     <script src="side_panel.js"></script>
+    <script src="reminder.js"></script>
   </body>
 </html>

@@ -1,13 +1,11 @@
 /* ═══════════════════════════════════════════════
-   STICKY NOTES — SIDE PANEL LOGIC
+   PERFECT STICKY — NOTES FEATURE (side_panel.js)
+   Requires: shared.js loaded first
    ═══════════════════════════════════════════════ */
 
 "use strict";
 
-// ── Constants ──────────────────────────────────
-const STORAGE_KEY = "stickyNotes_v1";
-const THEME_KEY = "stickyNotes_theme";
-
+// ── Note color strip map ──────────────────────────
 const COLOR_STRIP_MAP = {
   yellow: "#FDE68A",
   pink: "#FECDD3",
@@ -17,7 +15,7 @@ const COLOR_STRIP_MAP = {
   white: "#E2E8F0",
 };
 
-// ── State ──────────────────────────────────────
+// ── Notes state ───────────────────────────────────
 let notes = [];
 let activeTab = "all";
 let searchQuery = "";
@@ -25,12 +23,8 @@ let editingNoteId = null;
 let currentUrl = "";
 let isDirty = false;
 
-// ── DOM Refs ───────────────────────────────────
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
-
+// ── Notes DOM refs ────────────────────────────────
 const els = {
-  body: document.body,
   container: $("#notes-container"),
   emptyState: $("#empty-state"),
   emptyTitle: $("#empty-title"),
@@ -38,18 +32,14 @@ const els = {
   searchInput: $("#search-input"),
   clearSearch: $("#btn-clear-search"),
   btnNew: $("#btn-new"),
-  btnTheme: $("#btn-theme"),
-  iconSun: $("#icon-sun"),
-  iconMoon: $("#icon-moon"),
   fab: $("#fab"),
   tabs: $$(".tab"),
   // Editor
   overlay: $("#editor-overlay"),
-  editorCard: $("#editor-card"),
   editorStrip: $("#editor-strip"),
   editorTitle: $("#editor-title"),
   editorContent: $("#editor-content"),
-  btnCloseEditor: $("#btn-close-editor"),
+  btnClose: $("#btn-close-editor"),
   btnSave: $("#btn-save"),
   btnDelete: $("#btn-delete"),
   btnArchive: $("#btn-archive"),
@@ -59,92 +49,9 @@ const els = {
   urlTagText: $("#url-tag-text"),
   colorDots: $$(".color-dot"),
   toolBtns: $$(".tool-btn"),
-  toast: $("#toast"),
 };
 
-// ── Helpers ────────────────────────────────────
-const genId = () =>
-  Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-const now = () => {
-  const d = new Date();
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: d.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
-  });
-};
-const stripHtml = (html) => {
-  const div = document.createElement("div");
-  div.innerHTML = html;
-  return div.textContent || "";
-};
-const debounce = (fn, ms) => {
-  let t;
-  return (...args) => {
-    clearTimeout(t);
-    t = setTimeout(() => fn(...args), ms);
-  };
-};
-
-// ── Storage ────────────────────────────────────
-async function loadNotes() {
-  return new Promise((res) => {
-    if (typeof chrome !== "undefined" && chrome.storage) {
-      chrome.storage.local.get(STORAGE_KEY, (data) => {
-        res(Array.isArray(data[STORAGE_KEY]) ? data[STORAGE_KEY] : []);
-      });
-    } else {
-      // Browser preview fallback
-      const raw = localStorage.getItem(STORAGE_KEY);
-      res(raw ? JSON.parse(raw) : []);
-    }
-  });
-}
-
-async function saveNotes() {
-  return new Promise((res) => {
-    if (typeof chrome !== "undefined" && chrome.storage) {
-      chrome.storage.local.set({ [STORAGE_KEY]: notes }, res);
-    } else {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-      res();
-    }
-  });
-}
-
-// ── Theme ──────────────────────────────────────
-function loadTheme() {
-  const saved =
-    typeof chrome !== "undefined" && chrome.storage
-      ? null // loaded async below
-      : localStorage.getItem(THEME_KEY);
-  if (saved === "dark") applyTheme("dark");
-
-  if (typeof chrome !== "undefined" && chrome.storage) {
-    chrome.storage.local.get(THEME_KEY, (d) => {
-      if (d[THEME_KEY] === "dark") applyTheme("dark");
-    });
-  }
-}
-
-function applyTheme(mode) {
-  els.body.classList.toggle("dark", mode === "dark");
-  els.body.classList.toggle("light", mode !== "dark");
-  els.iconSun.style.display = mode === "dark" ? "none" : "block";
-  els.iconMoon.style.display = mode === "dark" ? "block" : "none";
-  const storage =
-    typeof chrome !== "undefined" && chrome.storage
-      ? chrome.storage.local
-      : null;
-  if (storage) storage.set({ [THEME_KEY]: mode });
-  else localStorage.setItem(THEME_KEY, mode);
-}
-
-function toggleTheme() {
-  applyTheme(els.body.classList.contains("dark") ? "light" : "dark");
-}
-
-// ── Current URL ─────────────────────────────────
+// ── Current URL ───────────────────────────────────
 async function getCurrentUrl() {
   if (typeof chrome !== "undefined" && chrome.tabs) {
     return new Promise((res) => {
@@ -165,10 +72,9 @@ function formatUrl(url) {
   }
 }
 
-// ── Render Notes ────────────────────────────────
+// ── Render Notes ──────────────────────────────────
 function getFilteredNotes() {
   let filtered = [...notes];
-  // Tab filter
   if (activeTab === "page")
     filtered = filtered.filter((n) => !n.archived && n.url === currentUrl);
   else if (activeTab === "favorites")
@@ -177,7 +83,6 @@ function getFilteredNotes() {
     filtered = filtered.filter((n) => n.archived);
   else filtered = filtered.filter((n) => !n.archived);
 
-  // Search
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
     filtered = filtered.filter(
@@ -202,11 +107,9 @@ function renderNotes() {
 
   els.container.style.display = "flex";
   els.emptyState.hidden = true;
-
-  filtered.forEach((note, i) => {
-    const card = createNoteCard(note, i);
-    els.container.appendChild(card);
-  });
+  filtered.forEach((note, i) =>
+    els.container.appendChild(createNoteCard(note, i)),
+  );
 }
 
 function setEmptyText() {
@@ -222,7 +125,7 @@ function setEmptyText() {
     favorites: ["No favorites yet", "Star a note to add it to Favorites"],
     archive: ["Archive is empty", "Archived notes will appear here"],
   };
-  const [title, sub] = msgs[activeTab];
+  const [title, sub] = msgs[activeTab] || msgs.all;
   if (searchQuery) {
     els.emptyTitle.textContent = "No results found";
     els.emptySubtitle.innerHTML = `No notes match "<strong>${escapeHtml(searchQuery)}</strong>"`;
@@ -247,8 +150,11 @@ function createNoteCard(note, index) {
     <div class="note-body">
       <div class="note-header">
         <span class="note-title">${escapeHtml(note.title || "Untitled")}</span>
-        <button class="note-fav-btn ${note.favorite ? "favorited" : ""}" aria-label="${note.favorite ? "Remove from favorites" : "Add to favorites"}" data-id="${note.id}">
-          <svg viewBox="0 0 24 24" fill="${note.favorite ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="note-fav-btn ${note.favorite ? "favorited" : ""}"
+          aria-label="${note.favorite ? "Remove from favorites" : "Add to favorites"}"
+          data-id="${note.id}">
+          <svg viewBox="0 0 24 24" fill="${note.favorite ? "currentColor" : "none"}"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
         </button>
@@ -258,8 +164,12 @@ function createNoteCard(note, index) {
         <span class="note-date">${note.updatedAt ? formatDate(note.updatedAt) : "Just now"}</span>
         ${
           urlLabel
-            ? `<span class="note-url-chip">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            ? `
+        <span class="note-url-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
           ${escapeHtml(urlLabel)}
         </span>`
             : ""
@@ -269,20 +179,16 @@ function createNoteCard(note, index) {
     </div>
   `;
 
-  // Click → open editor
   card.addEventListener("click", (e) => {
     if (e.target.closest(".note-fav-btn")) return;
     openEditor(note.id);
   });
-
   card.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       openEditor(note.id);
     }
   });
-
-  // Favorite toggle on card
   card.querySelector(".note-fav-btn").addEventListener("click", async (e) => {
     e.stopPropagation();
     await toggleFavorite(note.id);
@@ -291,59 +197,30 @@ function createNoteCard(note, index) {
   return card;
 }
 
-function formatDate(ts) {
-  const d = new Date(ts);
-  const today = new Date();
-  if (d.toDateString() === today.toDateString()) {
-    return d.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  }
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-// ── Editor ─────────────────────────────────────
+// ── Editor ────────────────────────────────────────
 async function openEditor(noteId) {
   const note = noteId ? notes.find((n) => n.id === noteId) : null;
   editingNoteId = noteId || null;
   isDirty = false;
 
-  // Populate fields
   els.editorTitle.value = note?.title || "";
   els.editorContent.innerHTML = note?.content || "";
 
-  // Color
   const color = note?.color || "yellow";
   setEditorColor(color);
-
-  // Favorite
   syncFavoriteBtn(note?.favorite || false);
 
-  // URL tag
   const url = note?.url || currentUrl;
+  els.urlTag.hidden = !url;
   if (url) {
-    els.urlTag.hidden = false;
     els.urlTagText.textContent = formatUrl(url);
     els.urlTagText.title = url;
-  } else {
-    els.urlTag.hidden = true;
   }
 
-  // New vs existing
   els.btnDelete.style.display = noteId ? "flex" : "none";
   els.btnArchive.style.display = noteId ? "flex" : "none";
   syncArchiveBtn(note?.archived || false);
 
-  // Show
   els.overlay.hidden = false;
   requestAnimationFrame(() => els.editorTitle.focus());
 }
@@ -356,18 +233,13 @@ function closeEditor() {
 }
 
 function setEditorColor(color) {
-  // Update strip
   els.editorStrip.style.background =
     COLOR_STRIP_MAP[color] || COLOR_STRIP_MAP.yellow;
-
-  // Update color dots
   els.colorDots.forEach((dot) => {
     const isActive = dot.dataset.color === color;
     dot.classList.toggle("active", isActive);
     dot.setAttribute("aria-pressed", String(isActive));
   });
-
-  // Store selected color on overlay for save
   els.overlay.dataset.color = color;
 }
 
@@ -388,7 +260,7 @@ function syncArchiveBtn(archived) {
   );
 }
 
-// ── CRUD ───────────────────────────────────────
+// ── CRUD ──────────────────────────────────────────
 async function saveNote() {
   const title = els.editorTitle.value.trim();
   const content = els.editorContent.innerHTML.trim();
@@ -406,7 +278,7 @@ async function saveNote() {
 
   if (editingNoteId) {
     const idx = notes.findIndex((n) => n.id === editingNoteId);
-    if (idx !== -1) {
+    if (idx !== -1)
       notes[idx] = {
         ...notes[idx],
         title,
@@ -416,7 +288,6 @@ async function saveNote() {
         archived,
         updatedAt: Date.now(),
       };
-    }
   } else {
     notes.unshift({
       id: genId(),
@@ -431,7 +302,7 @@ async function saveNote() {
     });
   }
 
-  await saveNotes();
+  await saveNotes(notes);
   isDirty = false;
   closeEditor();
   renderNotes();
@@ -439,16 +310,18 @@ async function saveNote() {
 }
 
 async function autoSave() {
-  const title = els.editorTitle.value.trim();
-  const content = els.editorContent.innerHTML.trim();
-  if (!title && !stripHtml(content)) return;
+  if (
+    !els.editorTitle.value.trim() &&
+    !stripHtml(els.editorContent.innerHTML.trim())
+  )
+    return;
   await saveNote();
 }
 
 async function deleteNote() {
   if (!editingNoteId) return;
   notes = notes.filter((n) => n.id !== editingNoteId);
-  await saveNotes();
+  await saveNotes(notes);
   closeEditor();
   renderNotes();
   showToast("Note deleted");
@@ -458,7 +331,7 @@ async function toggleFavorite(noteId) {
   const idx = notes.findIndex((n) => n.id === noteId);
   if (idx === -1) return;
   notes[idx].favorite = !notes[idx].favorite;
-  await saveNotes();
+  await saveNotes(notes);
   renderNotes();
 }
 
@@ -467,29 +340,14 @@ async function toggleArchive() {
   const idx = notes.findIndex((n) => n.id === editingNoteId);
   if (idx === -1) return;
   notes[idx].archived = !notes[idx].archived;
-  await saveNotes();
+  await saveNotes(notes);
   isDirty = false;
   closeEditor();
   renderNotes();
   showToast(notes[idx].archived ? "Note archived" : "Note unarchived");
 }
 
-// ── Toast ──────────────────────────────────────
-let toastTimer;
-function showToast(msg) {
-  els.toast.textContent = msg;
-  els.toast.hidden = false;
-  els.toast.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    els.toast.classList.remove("show");
-    setTimeout(() => {
-      els.toast.hidden = true;
-    }, 200);
-  }, 2200);
-}
-
-// ── Rich Text Formatting ───────────────────────
+// ── Rich Text ─────────────────────────────────────
 function handleToolBtn(cmd) {
   document.execCommand(cmd, false, null);
   els.editorContent.focus();
@@ -506,23 +364,18 @@ function updateToolbarState() {
   });
 }
 
-// ── Search ─────────────────────────────────────
+// ── Search ────────────────────────────────────────
 const debouncedSearch = debounce(() => {
   searchQuery = els.searchInput.value.trim();
   els.clearSearch.style.display = searchQuery ? "flex" : "none";
   renderNotes();
 }, 200);
 
-// ── Event Bindings ─────────────────────────────
-function bindEvents() {
-  // New note buttons
+// ── Event Bindings ────────────────────────────────
+function bindNotesEvents() {
   els.btnNew.addEventListener("click", () => openEditor(null));
   els.fab.addEventListener("click", () => openEditor(null));
 
-  // Theme
-  els.btnTheme.addEventListener("click", toggleTheme);
-
-  // Search
   els.searchInput.addEventListener("input", debouncedSearch);
   els.clearSearch.addEventListener("click", () => {
     els.searchInput.value = "";
@@ -532,7 +385,6 @@ function bindEvents() {
     els.searchInput.focus();
   });
 
-  // Tabs
   els.tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       activeTab = tab.dataset.tab;
@@ -546,12 +398,10 @@ function bindEvents() {
     });
   });
 
-  // Editor
-  els.btnCloseEditor.addEventListener("click", closeEditor);
+  els.btnClose.addEventListener("click", closeEditor);
   els.overlay.addEventListener("click", (e) => {
     if (e.target === els.overlay) closeEditor();
   });
-
   els.btnSave.addEventListener("click", saveNote);
   els.btnDelete.addEventListener("click", deleteNote);
   els.btnArchive.addEventListener("click", toggleArchive);
@@ -561,17 +411,13 @@ function bindEvents() {
     isDirty = true;
   });
 
-  // Color dots
-  els.colorDots.forEach((dot) => {
-    dot.addEventListener("click", () => setEditorColor(dot.dataset.color));
-  });
+  els.colorDots.forEach((dot) =>
+    dot.addEventListener("click", () => setEditorColor(dot.dataset.color)),
+  );
+  els.toolBtns.forEach((btn) =>
+    btn.addEventListener("click", () => handleToolBtn(btn.dataset.cmd)),
+  );
 
-  // Toolbar
-  els.toolBtns.forEach((btn) => {
-    btn.addEventListener("click", () => handleToolBtn(btn.dataset.cmd));
-  });
-
-  // Track rich text changes
   els.editorContent.addEventListener("input", () => {
     isDirty = true;
     updateToolbarState();
@@ -582,7 +428,6 @@ function bindEvents() {
     isDirty = true;
   });
 
-  // Keyboard: Ctrl+S to save, Escape to close
   document.addEventListener("keydown", (e) => {
     if (els.overlay.hidden) return;
     if ((e.ctrlKey || e.metaKey) && e.key === "s") {
@@ -592,7 +437,6 @@ function bindEvents() {
     if (e.key === "Escape") closeEditor();
   });
 
-  // Tab via keyboard in editor
   els.editorContent.addEventListener("keydown", (e) => {
     if (e.key === "Tab") {
       e.preventDefault();
@@ -601,14 +445,30 @@ function bindEvents() {
   });
 }
 
-// ── Init ───────────────────────────────────────
-async function init() {
-  loadTheme();
-  bindEvents();
+// ── Theme & Feature Switcher bindings ─────────────
+function bindGlobalEvents() {
+  $("#btn-theme")?.addEventListener("click", toggleTheme);
 
+  $$(".feat-btn").forEach((btn) => {
+    btn.addEventListener("click", () => setActiveFeature(btn.dataset.feature));
+  });
+}
+
+// ── Init ──────────────────────────────────────────
+async function initNotes() {
   [notes, currentUrl] = await Promise.all([loadNotes(), getCurrentUrl()]);
-
   renderNotes();
+}
+
+async function init() {
+  await loadTheme();
+  bindGlobalEvents();
+  bindNotesEvents();
+
+  const activeFeature = await loadActiveFeature();
+  setActiveFeature(activeFeature);
+
+  await initNotes();
 }
 
 init();

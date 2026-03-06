@@ -12,6 +12,18 @@
   --danger: #ef4444;
   --danger-hover: #dc2626;
 
+  /* Reminder accent colors */
+  --accent-green: #22c55e;
+  --accent-green-bg: rgba(34, 197, 94, 0.12);
+  --accent-amber: #f59e0b;
+  --accent-amber-bg: rgba(245, 158, 11, 0.12);
+  --progress-track: rgba(0, 0, 0, 0.08);
+
+  /* Feature switcher */
+  --switcher-bg: #f1f5f9;
+  --switcher-active-bg: #ffffff;
+  --switcher-active-color: var(--primary);
+
   /* Backgrounds */
   --bg: #f8fafc;
   --bg-card: #ffffff;
@@ -99,6 +111,12 @@
   --note-blue-bg: #172033;
   --note-purple-bg: #1e1929;
   --note-white-bg: #1e293b;
+  /* Reminder dark overrides */
+  --accent-green-bg: rgba(34, 197, 94, 0.15);
+  --accent-amber-bg: rgba(245, 158, 11, 0.15);
+  --progress-track: rgba(255, 255, 255, 0.08);
+  --switcher-bg: rgba(255, 255, 255, 0.06);
+  --switcher-active-bg: #1e293b;
 }
 
 /* ── Reset & Base ── */
@@ -933,6 +951,447 @@ input,
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* ── FAB: hide in reminder mode ── */
+#reminder-section:not([hidden]) ~ .fab,
+body:has(#reminder-section:not([hidden])) .fab {
+  display: none;
+}
+
+/* ── btn-new: hide in reminder mode ── */
+body:has(#reminder-section:not([hidden])) #btn-new {
+  display: none;
+}
+
+/* ══════════════════════════════════
+   FEATURE SWITCHER
+══════════════════════════════════ */
+.feat-switcher {
+  display: flex;
+  align-items: center;
+  background: var(--switcher-bg);
+  border-radius: var(--r-full);
+  padding: 3px;
+  gap: 2px;
+  transition: background var(--t-slow);
+}
+
+.feat-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: var(--r-full);
+  white-space: nowrap;
+  transition: all var(--t-base);
+  line-height: 1;
+}
+
+.feat-btn svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.feat-btn:hover {
+  color: var(--text-primary);
+}
+
+.feat-btn.active {
+  background: var(--switcher-active-bg);
+  color: var(--switcher-active-color);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.dark .feat-btn.active {
+  background: var(--switcher-active-bg);
+  color: #93c5fd;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+/* ══════════════════════════════════
+   NOTES SECTION
+══════════════════════════════════ */
+#notes-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+#notes-section[hidden] {
+  display: none !important;
+}
+
+/* ══════════════════════════════════
+   REMINDER SECTION
+══════════════════════════════════ */
+.reminder-section {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-md) var(--sp-lg) var(--sp-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-md);
+  animation: fadeIn var(--t-slow) both;
+}
+
+.reminder-section[hidden] {
+  display: none !important;
+}
+
+.reminder-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ── Reminder Card (base) ── */
+.reminder-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: var(--sp-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-lg);
+  box-shadow: var(--shadow-sm);
+  animation: slideIn var(--t-slow) both;
+  transition: background var(--t-slow), border-color var(--t-slow);
+}
+
+/* ── Reminder heading ── */
+.reminder-heading {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: -0.3px;
+}
+
+.reminder-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ── Reminder illustrations ── */
+.reminder-illus {
+  width: 72px;
+  height: 72px;
+  color: var(--text-muted);
+}
+
+.stand-illus {
+  color: var(--accent-amber);
+}
+
+/* ── Enable button ── */
+.reminder-enable-btn {
+  width: 100%;
+  justify-content: center;
+  height: 40px;
+  font-size: 14px;
+  border-radius: var(--r-md);
+}
+
+/* ── Settings ── */
+.reminder-settings {
+  width: 100%;
+  background: var(--bg-input);
+  border-radius: var(--r-md);
+  padding: var(--sp-md);
+  transition: background var(--t-slow);
+}
+
+.settings-compact {
+  padding: var(--sp-xs);
+}
+
+.settings-compact details {
+  width: 100%;
+}
+
+.settings-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--sp-sm);
+  display: block;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  padding: var(--sp-xs) var(--sp-sm);
+  border-radius: var(--r-sm);
+  color: var(--text-secondary);
+  margin-bottom: 0;
+  transition: all var(--t-fast);
+}
+
+.settings-toggle:hover {
+  background: var(--border);
+  color: var(--text-primary);
+}
+
+.settings-toggle::-webkit-details-marker { display: none; }
+
+.settings-rows {
+  padding-top: var(--sp-sm);
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-xs) var(--sp-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.reminder-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 3px 6px;
+  cursor: pointer;
+  transition: border-color var(--t-base);
+}
+
+.reminder-select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+/* ── Timer ── */
+.timer-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-svg {
+  width: 140px;
+  height: 140px;
+  position: absolute;
+  inset: 0;
+}
+
+.timer-track {
+  stroke: var(--progress-track);
+}
+
+.timer-ring {
+  transition: stroke-dashoffset 0.8s ease-out;
+}
+
+.ring-green {
+  stroke: var(--accent-green);
+  filter: drop-shadow(0 0 6px rgba(34,197,94,0.4));
+}
+
+.ring-amber {
+  stroke: var(--accent-amber);
+  filter: drop-shadow(0 0 6px rgba(245,158,11,0.4));
+}
+
+.timer-text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  z-index: 1;
+}
+
+.timer-current {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.timer-total {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.snoozed-label {
+  font-size: 16px;
+}
+
+.timer-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ── Stats ── */
+.reminder-stats {
+  display: flex;
+  gap: var(--sp-sm);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-input);
+  border-radius: var(--r-full);
+  padding: 5px var(--sp-md);
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: background var(--t-slow);
+}
+
+.stat-chip strong {
+  color: var(--text-primary);
+}
+
+.stat-streak { color: var(--accent-amber); }
+.stat-streak strong { color: var(--accent-amber); }
+
+.stand-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--accent-green);
+  flex-shrink: 0;
+}
+
+.streak-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--accent-amber);
+  flex-shrink: 0;
+}
+
+/* ── Disable button ── */
+.btn-ghost-sm {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: var(--sp-xs) var(--sp-md);
+  border-radius: var(--r-full);
+  border: 1px solid var(--border);
+  transition: all var(--t-base);
+  font-family: inherit;
+}
+
+.btn-ghost-sm:hover {
+  background: var(--bg-input);
+  color: var(--text-secondary);
+}
+
+/* ── Break Due ── */
+.reminder-break {
+  border-color: var(--accent-amber);
+  position: relative;
+  overflow: hidden;
+}
+
+.break-glow {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(245,158,11,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.break-heading {
+  color: var(--accent-amber);
+}
+
+.break-actions {
+  display: flex;
+  gap: var(--sp-sm);
+  width: 100%;
+  justify-content: center;
+}
+
+.break-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: var(--sp-sm) var(--sp-md);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all var(--t-base);
+  white-space: nowrap;
+}
+
+.btn-done {
+  background: var(--accent-green);
+  color: #fff;
+  flex: 1;
+}
+.btn-done:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34,197,94,0.35);
+}
+
+.btn-snooze {
+  background: var(--accent-amber-bg);
+  color: var(--accent-amber);
+  border: 1px solid rgba(245,158,11,0.3);
+  flex: 1;
+}
+.btn-snooze:hover {
+  background: rgba(245,158,11,0.2);
+  transform: translateY(-1px);
+}
+
+.btn-skip {
+  background: var(--bg-input);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: var(--sp-sm) var(--sp-md);
+}
+.btn-skip:hover {
+  color: var(--text-secondary);
+  background: var(--border);
+}
+
+.break-stat {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.break-stat strong {
+  color: var(--accent-green);
 }
 
 /* ── Reduced motion ── */

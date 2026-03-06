@@ -146,7 +146,7 @@ function createNoteCard(note, index) {
     <div class="note-strip" aria-hidden="true"></div>
     <div class="note-body">
       <div class="note-header">
-        <span class="note-title">${escapeHtml(note.title || "Untitled")}</span>
+        <span class="note-title">${escapeHtml(note.title || t("note.untitled"))}</span>
         <button class="note-fav-btn ${note.favorite ? "favorited" : ""}"
           aria-label="${note.favorite ? t("note.fav_remove") : t("note.fav_add")}"
           data-id="${note.id}">
@@ -158,7 +158,7 @@ function createNoteCard(note, index) {
       </div>
       ${preview ? `<p class="note-preview">${escapeHtml(preview)}</p>` : ""}
       <div class="note-meta">
-        <span class="note-date">${note.updatedAt ? formatDate(note.updatedAt) : "Just now"}</span>
+        <span class="note-date">${note.updatedAt ? formatDate(note.updatedAt) : t("note.just_now")}</span>
         ${
           urlLabel
             ? `

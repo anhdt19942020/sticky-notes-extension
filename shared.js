@@ -153,6 +153,7 @@ const LOCALES = {
 
     // ── Note card ──
     "note.untitled": "Chưa có tiêu đề",
+    "note.just_now": "Vừa xong",
     "note.fav_add": "Thêm vào yêu thích",
     "note.fav_remove": "Bỏ yêu thích",
     "note.archived": "đã lưu trữ",
@@ -254,6 +255,7 @@ const LOCALES = {
 
     // ── Note card ──
     "note.untitled": "Untitled",
+    "note.just_now": "Just now",
     "note.fav_add": "Add to favorites",
     "note.fav_remove": "Remove from favorites",
     "note.archived": "archived",

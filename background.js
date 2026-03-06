@@ -250,16 +250,22 @@ chrome.idle.onStateChanged.addListener(async (idleState) => {
     }
   } else if (idleState === "active") {
     // User returned to work
+    if (_reminder.state === "idle" && _reminder.enabled) {
+      // Was reset to IDLE by long idle → start fresh cycle now
+      await transitionTo("active");
+      return;
+    }
+
     if (!_reminder.idleStartTime) return;
 
     const idleMinutes = (Date.now() - _reminder.idleStartTime) / 60000;
     _reminder.idleStartTime = null;
 
     if (idleMinutes >= _reminder.idleThresholdMinutes) {
-      // ── Long idle → natural break absorbed, start fresh cycle ──
-      // Works for ALL states: active, break_due, snoozed
-      // transitionTo("active") handles: clear notifications, clear badge,
-      // clear snooze alarm, reset activeStartTime, start check alarm
+      // ── Long idle → transition to IDLE (natural break absorbed) ──
+      // transitionTo("idle") clears: notifications, badge, alarms, timestamps
+      await transitionTo("idle");
+      // Then immediately start fresh cycle since user is now active
       await transitionTo("active");
     } else if (_reminder.state === "active") {
       // ── Short idle while active → subtract idle time, resume ──
@@ -352,8 +358,9 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (_reminder.idleStartTime) {
       const idleMinutes = (Date.now() - _reminder.idleStartTime) / 60000;
       if (idleMinutes >= _reminder.idleThresholdMinutes) {
-        // Stale state from before sleep — reset to fresh cycle
+        // Stale state → transition to IDLE first, then ACTIVE
         _reminder.idleStartTime = null;
+        await transitionTo("idle");
         await transitionTo("active");
         return;
       }

@@ -151,6 +151,10 @@ const LOCALES = {
     "settings.snooze": "Tạm hoãn",
     "settings.min": "{n} phút",
 
+    // ── Welcome back ──
+    welcome_back: "Nghỉ ngơi tốt rồi! 💪 Đếm lại từ đầu nhé.",
+    "welcome_back.absorbed": "Nghỉ ngơi tốt rồi! 💪 Đã ghi nhận 1 lần đứng.",
+
     // ── Note card ──
     "note.untitled": "Chưa có tiêu đề",
     "note.just_now": "Vừa xong",
@@ -252,6 +256,10 @@ const LOCALES = {
     "settings.idle": "Idle reset",
     "settings.snooze": "Snooze",
     "settings.min": "{n} min",
+
+    // ── Welcome back ──
+    welcome_back: "Good break! 💪 Fresh cycle started.",
+    "welcome_back.absorbed": "Good break! 💪 1 stand recorded.",
 
     // ── Note card ──
     "note.untitled": "Untitled",

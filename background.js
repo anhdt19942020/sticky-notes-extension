@@ -168,6 +168,21 @@ function broadcastState() {
     .catch(() => {}); // side panel may not be open
 }
 
+// ── Broadcast badge to all content scripts ────────
+async function broadcastBadge(show) {
+  const type = show ? "PP_SHOW_BADGE" : "PP_HIDE_BADGE";
+  try {
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (tab.id && tab.url && !tab.url.startsWith("chrome")) {
+        chrome.tabs.sendMessage(tab.id, { type }).catch(() => {});
+      }
+    }
+  } catch (_) {
+    /* ignore */
+  }
+}
+
 // ── State Machine Transitions ─────────────────────
 
 async function transitionTo(newState) {
@@ -180,11 +195,13 @@ async function transitionTo(newState) {
       _reminder.idleStartTime = null;
       await startCheckAlarm();
       clearNotification();
+      await broadcastBadge(false);
       break;
 
     case "break_due":
       await stopCheckAlarm();
       fireBreakNotification();
+      await broadcastBadge(true);
       break;
 
     case "snoozed":
@@ -197,6 +214,7 @@ async function transitionTo(newState) {
       _reminder.idleStartTime = null;
       await clearAllAlarms();
       clearNotification();
+      await broadcastBadge(false);
       break;
   }
 
@@ -262,11 +280,24 @@ chrome.idle.onStateChanged.addListener(async (idleState) => {
     _reminder.idleStartTime = null;
 
     if (idleMinutes >= _reminder.idleThresholdMinutes) {
-      // ── Long idle → transition to IDLE (natural break absorbed) ──
-      // transitionTo("idle") clears: notifications, badge, alarms, timestamps
+      // ── Long idle → natural break absorbed ──
+      const prevState = _reminder.state;
+
+      // Auto-record stand if break was due (user walked away = natural break)
+      if (prevState === "break_due" || prevState === "snoozed") {
+        recordStand();
+      }
+
       await transitionTo("idle");
-      // Then immediately start fresh cycle since user is now active
       await transitionTo("active");
+
+      // Broadcast welcome back to side panel
+      chrome.runtime
+        .sendMessage({
+          type: "WELCOME_BACK",
+          absorbed: prevState === "break_due" || prevState === "snoozed",
+        })
+        .catch(() => {});
     } else if (_reminder.state === "active") {
       // ── Short idle while active → subtract idle time, resume ──
       _reminder.activeStartTime += idleMinutes * 60000;
@@ -292,8 +323,16 @@ chrome.notifications.onButtonClicked.addListener(async (notifId, btnIdx) => {
   }
 });
 
-// ── Message handler (from side panel) ────────────
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+// ── Message handler (from side panel + content script) ──
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  // Content script: open side panel when badge clicked
+  if (msg.type === "OPEN_SIDE_PANEL") {
+    if (sender.tab?.id) {
+      chrome.sidePanel.open({ tabId: sender.tab.id }).catch(() => {});
+    }
+    return false;
+  }
+
   if (msg.type !== "REMINDER_ACTION") return false;
 
   (async () => {

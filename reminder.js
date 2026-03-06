@@ -465,18 +465,26 @@ function updateTimerDisplay() {
 
 // ── Background push listener ──────────────────────
 chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type !== "REMINDER_STATE") return;
-  const section = $("#reminder-section");
-  if (!section || section.hidden) return;
+  if (msg.type === "REMINDER_STATE") {
+    const section = $("#reminder-section");
+    if (!section || section.hidden) return;
 
-  const incoming = msg.payload;
-  const stateChanged = incoming.state !== _prevState;
-  _state = incoming;
+    const incoming = msg.payload;
+    const stateChanged = incoming.state !== _prevState;
+    _state = incoming;
 
-  // Only re-render on actual state transitions pushed from background
-  if (stateChanged) {
-    _prevState = incoming.state;
-    renderReminderView();
+    if (stateChanged) {
+      _prevState = incoming.state;
+      renderReminderView();
+    }
+  }
+
+  // Welcome back toast after long idle
+  if (msg.type === "WELCOME_BACK") {
+    const section = $("#reminder-section");
+    if (!section || section.hidden) return;
+    const key = msg.absorbed ? "welcome_back.absorbed" : "welcome_back";
+    showToast(t(key));
   }
 });
 

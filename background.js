@@ -37,9 +37,9 @@ const IDLE_INTERVAL_SEC = 60; // chrome.idle detection granularity
 // ── Default Reminder State ────────────────────────
 const DEFAULT_REMINDER = {
   enabled: false,
-  intervalMinutes: 30,
-  idleThresholdMinutes: 5,
-  snoozeMinutes: 10,
+  intervalMinutes: 1, // 🧪 TEST: change back to 30 for production
+  idleThresholdMinutes: 1, // 🧪 TEST: change back to 5 for production
+  snoozeMinutes: 1, // 🧪 TEST: change back to 10 for production
   state: "idle", // idle | active | break_due | snoozed
   activeStartTime: null, // timestamp when current active session began
   idleStartTime: null, // timestamp when idle started

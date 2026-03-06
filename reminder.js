@@ -91,10 +91,10 @@ const PERSON_SVG = `<svg class="stand-icon" viewBox="0 0 24 24" fill="none" stro
   <path d="M9 11h6" stroke-linecap="round"/>
 </svg>`;
 
-// ── Settings options ──────────────────────────────
-const INTERVAL_OPTS = [15, 20, 25, 30, 45, 60];
-const IDLE_OPTS = [3, 5, 10];
-const SNOOZE_OPTS = [5, 10, 15];
+// ── Settings options (1 = test mode) ─────────────
+const INTERVAL_OPTS = [1, 15, 20, 25, 30, 45, 60]; // 🧪 1 min for testing
+const IDLE_OPTS = [1, 3, 5, 10]; // 🧪 1 min for testing
+const SNOOZE_OPTS = [1, 5, 10, 15]; // 🧪 1 min for testing
 
 function buildSelect(opts, current, key) {
   return `<select class="reminder-select" data-key="${key}" aria-label="${key}">

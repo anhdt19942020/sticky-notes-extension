@@ -4,10 +4,11 @@ Tính năng **Nhắc Nhở Đứng Lên** (Stand Reminder) hoạt động như m
 
 ## 🚀 Các Chức Năng Cốt Lõi
 
-### 1. Chu Kỳ Nhắc Nhở Linh Hoạt
+### 1. Chu Kỳ Nhắc Nhở Linh Hoạt & Zero-Delay
 
 - Mặc định sau mỗi ~30 phút người dùng hoạt động liên tục (active), Chrome Alarm sẽ chuyển trạng thái và gửi Notification thông báo nhắc người dùng phải đứng dậy vươn vai.
 - Cài đặt tùy chỉnh, người dùng có thể tự thay đổi `Khoảnh Cách Đứng` (Interval), `Thời Gian Rời Máy` (Idle Detection), và `Thời Gian Hẹn Lại` (Snooze time).
+- **Proactive Trigger:** Nhờ UI Poll kiểm tra tiến độ liên tục trực tiếp, ngay khi đồng hồ nhảy về `00:00`, UI sẽ force Extension chuyển trạng thái ngay lập tức (zero-delay) để phá bỏ lớp delay 5-10 giây thường thấy ở Chrome Alarm thông thường.
 
 ### 2. Phát Hiện Trạng Thái AFK (Idle Detection & Reset)
 

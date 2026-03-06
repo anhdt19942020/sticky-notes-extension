@@ -5,13 +5,15 @@
 
 "use strict";
 
-// ── Side Panel Setup ──────────────────────────────
-chrome.sidePanel
-  .setPanelBehavior({ openPanelOnActionClick: true })
-  .catch(console.error);
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(console.error);
 
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {
   await chrome.sidePanel.setOptions({ tabId, path: "side_panel.html", enabled: true });
+  // Re-broadcast break badge to newly focused tab
+  await loadReminder();
+  if (_reminder.state === "break_due") {
+    chrome.tabs.sendMessage(tabId, { type: "PP_SHOW_BADGE" }).catch(() => {});
+  }
 });
 
 chrome.tabs.onUpdated.addListener(async (tabId, info) => {
@@ -72,12 +74,24 @@ async function stopCheckAlarm() { await chrome.alarms.clear(ALARM_CHECK); }
 async function startSnoozeAlarm(m) { await chrome.alarms.clear(ALARM_SNOOZE); chrome.alarms.create(ALARM_SNOOZE, { delayInMinutes: m }); }
 async function clearAllAlarms() { await chrome.alarms.clear(ALARM_CHECK); await chrome.alarms.clear(ALARM_SNOOZE); }
 
-function fireBreakNotification() {
+async function getLocale() {
+  const data = await chrome.storage.local.get("pp_locale");
+  return data["pp_locale"] || "vi";
+}
+
+async function fireBreakNotification() {
+  const locale = await getLocale();
+  const isVi = locale === "vi";
   chrome.notifications.create("pp_break", {
     type: "basic", iconUrl: "icons/icon-128.png",
-    title: "Time to Stand Up! 🧍",
-    message: `You've been sitting for ${_reminder.intervalMinutes} minutes. Take a break!`,
-    buttons: [{ title: "✅  Done — I stood up!" }, { title: `⏸  Snooze ${_reminder.snoozeMinutes}m` }],
+    title: isVi ? "Đến lúc đứng dậy! 🧍" : "Time to stand! 🧍",
+    message: isVi
+      ? `Bạn đã ngồi ${_reminder.intervalMinutes} phút rồi. Vươn vai một chút nhé!`
+      : `You've been sitting for ${_reminder.intervalMinutes} min. Quick stretch break!`,
+    buttons: [
+      { title: isVi ? "✅ Xong rồi!" : "✅ Done — I stood up!" },
+      { title: isVi ? `⏸ Hoãn ${_reminder.snoozeMinutes}p` : `⏸ Snooze ${_reminder.snoozeMinutes}m` },
+    ],
     requireInteraction: true, priority: 2,
   });
 }
@@ -85,10 +99,18 @@ function fireBreakNotification() {
 function clearNotification() { chrome.notifications.clear("pp_break"); }
 
 function updateBadge() {
-  if (_reminder.state === "break_due" || _reminder.state === "snoozed") {
-    chrome.action.setBadgeText({ text: "!" });
-    chrome.action.setBadgeBackgroundColor({ color: "#f59e0b" });
-  } else { chrome.action.setBadgeText({ text: "" }); }
+  switch (_reminder.state) {
+    case "break_due":
+      chrome.action.setBadgeText({ text: "🧍" });
+      chrome.action.setBadgeBackgroundColor({ color: "#dc2626" });
+      break;
+    case "snoozed":
+      chrome.action.setBadgeText({ text: "⏸" });
+      chrome.action.setBadgeBackgroundColor({ color: "#f59e0b" });
+      break;
+    default:
+      chrome.action.setBadgeText({ text: "" });
+  }
 }
 
 function broadcastState() {
@@ -114,9 +136,9 @@ async function transitionTo(newState) {
       _reminder.activeStartTime = Date.now(); _reminder.idleStartTime = null;
       await startCheckAlarm(); clearNotification(); await broadcastBadge(false); break;
     case "break_due":
-      await stopCheckAlarm(); fireBreakNotification(); await broadcastBadge(true); break;
+      await stopCheckAlarm(); await fireBreakNotification(); await broadcastBadge(true); break;
     case "snoozed":
-      clearNotification(); await startSnoozeAlarm(_reminder.snoozeMinutes); break;
+      clearNotification(); await broadcastBadge(false); await startSnoozeAlarm(_reminder.snoozeMinutes); break;
     case "idle":
       _reminder.activeStartTime = null; _reminder.idleStartTime = null;
       await clearAllAlarms(); clearNotification(); await broadcastBadge(false); break;

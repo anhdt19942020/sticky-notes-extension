@@ -240,25 +240,33 @@ chrome.idle.onStateChanged.addListener(async (idleState) => {
   await loadReminder();
   if (!_reminder.enabled) return;
 
+  const activeStates = ["active", "break_due", "snoozed"];
+
   if (idleState === "idle" || idleState === "locked") {
-    if (_reminder.state === "active") {
+    // Record idle start for ANY active state
+    if (activeStates.includes(_reminder.state) && !_reminder.idleStartTime) {
       _reminder.idleStartTime = Date.now();
       await saveReminder();
     }
   } else if (idleState === "active") {
-    if (_reminder.state === "active" && _reminder.idleStartTime) {
-      const idleMinutes = (Date.now() - _reminder.idleStartTime) / 60000;
-      if (idleMinutes >= _reminder.idleThresholdMinutes) {
-        // Long idle → reset timer
-        _reminder.idleStartTime = null;
-        await transitionTo("active"); // resets activeStartTime
-      } else {
-        // Short idle → resume, subtract idle time from active
-        _reminder.activeStartTime += Date.now() - _reminder.idleStartTime;
-        _reminder.idleStartTime = null;
-        await saveReminder();
-      }
+    // User returned to work
+    if (!_reminder.idleStartTime) return;
+
+    const idleMinutes = (Date.now() - _reminder.idleStartTime) / 60000;
+    _reminder.idleStartTime = null;
+
+    if (idleMinutes >= _reminder.idleThresholdMinutes) {
+      // ── Long idle → natural break absorbed, start fresh cycle ──
+      // Works for ALL states: active, break_due, snoozed
+      // transitionTo("active") handles: clear notifications, clear badge,
+      // clear snooze alarm, reset activeStartTime, start check alarm
+      await transitionTo("active");
+    } else if (_reminder.state === "active") {
+      // ── Short idle while active → subtract idle time, resume ──
+      _reminder.activeStartTime += idleMinutes * 60000;
+      await saveReminder();
     }
+    // Short idle while break_due/snoozed → no-op, keep current state
   }
 });
 
@@ -339,9 +347,23 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 (async () => {
   await loadReminder();
 
-  // If was active/break_due when SW died → restart alarm
-  if (_reminder.enabled && _reminder.state === "active") {
-    await startCheckAlarm();
+  if (_reminder.enabled) {
+    // Check if idle duration during SW sleep exceeded threshold
+    if (_reminder.idleStartTime) {
+      const idleMinutes = (Date.now() - _reminder.idleStartTime) / 60000;
+      if (idleMinutes >= _reminder.idleThresholdMinutes) {
+        // Stale state from before sleep — reset to fresh cycle
+        _reminder.idleStartTime = null;
+        await transitionTo("active");
+        return;
+      }
+    }
+
+    // Restart alarm if was active when SW died
+    if (_reminder.state === "active") {
+      await startCheckAlarm();
+    }
   }
+
   updateBadge();
 })();

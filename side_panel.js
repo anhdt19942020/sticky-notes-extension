@@ -113,33 +113,30 @@ function renderNotes() {
 }
 
 function setEmptyText() {
-  const msgs = {
-    all: [
-      "No notes yet",
-      "Click <strong>New</strong> to create your first sticky note",
-    ],
-    page: [
-      "No notes for this page",
-      "Notes tagged to this URL will appear here",
-    ],
-    favorites: ["No favorites yet", "Star a note to add it to Favorites"],
-    archive: ["Archive is empty", "Archived notes will appear here"],
-  };
-  const [title, sub] = msgs[activeTab] || msgs.all;
   if (searchQuery) {
-    els.emptyTitle.textContent = "No results found";
-    els.emptySubtitle.innerHTML = `No notes match "<strong>${escapeHtml(searchQuery)}</strong>"`;
+    els.emptyTitle.textContent = t("empty.search.title");
+    els.emptySubtitle.innerHTML = `${t("empty.search.sub")} "<strong>${escapeHtml(searchQuery)}</strong>"`;
     return;
   }
-  els.emptyTitle.innerHTML = title;
-  els.emptySubtitle.innerHTML = sub;
+  const keyMap = {
+    all: ["empty.all.title", "empty.all.sub"],
+    page: ["empty.page.title", "empty.page.sub"],
+    favorites: ["empty.fav.title", "empty.fav.sub"],
+    archive: ["empty.arc.title", "empty.arc.sub"],
+  };
+  const [titleKey, subKey] = keyMap[activeTab] || keyMap.all;
+  els.emptyTitle.innerHTML = t(titleKey);
+  els.emptySubtitle.innerHTML = t(subKey);
 }
 
 function createNoteCard(note, index) {
   const card = document.createElement("article");
   card.className = `note-card ${note.color || "yellow"}`;
   card.tabIndex = 0;
-  card.setAttribute("aria-label", `Note: ${note.title || "Untitled"}`);
+  card.setAttribute(
+    "aria-label",
+    `${t("feat.notes")}: ${note.title || t("note.untitled")}`,
+  );
   card.style.animationDelay = `${index * 30}ms`;
 
   const preview = stripHtml(note.content).slice(0, 120);
@@ -151,7 +148,7 @@ function createNoteCard(note, index) {
       <div class="note-header">
         <span class="note-title">${escapeHtml(note.title || "Untitled")}</span>
         <button class="note-fav-btn ${note.favorite ? "favorited" : ""}"
-          aria-label="${note.favorite ? "Remove from favorites" : "Add to favorites"}"
+          aria-label="${note.favorite ? t("note.fav_remove") : t("note.fav_add")}"
           data-id="${note.id}">
           <svg viewBox="0 0 24 24" fill="${note.favorite ? "currentColor" : "none"}"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -174,7 +171,7 @@ function createNoteCard(note, index) {
         </span>`
             : ""
         }
-        ${note.archived ? '<span class="note-archived-badge">archived</span>' : ""}
+        ${note.archived ? `<span class="note-archived-badge">${t("note.archived")}</span>` : ""}
       </div>
     </div>
   `;
@@ -271,7 +268,7 @@ async function saveNote() {
     : false;
 
   if (!title && !stripHtml(content)) {
-    showToast("Write something first!");
+    showToast(t("toast.write_first"));
     els.editorContent.focus();
     return;
   }
@@ -306,7 +303,7 @@ async function saveNote() {
   isDirty = false;
   closeEditor();
   renderNotes();
-  showToast(editingNoteId ? "Note updated" : "Note saved ✓");
+  showToast(editingNoteId ? t("toast.updated") : t("toast.saved"));
 }
 
 async function autoSave() {
@@ -324,7 +321,7 @@ async function deleteNote() {
   await saveNotes(notes);
   closeEditor();
   renderNotes();
-  showToast("Note deleted");
+  showToast(t("toast.deleted"));
 }
 
 async function toggleFavorite(noteId) {
@@ -344,7 +341,7 @@ async function toggleArchive() {
   isDirty = false;
   closeEditor();
   renderNotes();
-  showToast(notes[idx].archived ? "Note archived" : "Note unarchived");
+  showToast(notes[idx].archived ? t("toast.archived") : t("toast.unarchived"));
 }
 
 // ── Rich Text ─────────────────────────────────────
@@ -445,9 +442,10 @@ function bindNotesEvents() {
   });
 }
 
-// ── Theme & Feature Switcher bindings ─────────────
+// ── Theme & Feature Switcher & Lang bindings ──────
 function bindGlobalEvents() {
   $("#btn-theme")?.addEventListener("click", toggleTheme);
+  $("#btn-lang")?.addEventListener("click", toggleLocale);
 
   $$(".feat-btn").forEach((btn) => {
     btn.addEventListener("click", () => setActiveFeature(btn.dataset.feature));
@@ -461,9 +459,12 @@ async function initNotes() {
 }
 
 async function init() {
-  await loadTheme();
+  await Promise.all([loadTheme(), loadLocale()]);
   bindGlobalEvents();
   bindNotesEvents();
+
+  // Expose re-render hook for locale changes
+  window.renderNotesForLocale = renderNotes;
 
   const activeFeature = await loadActiveFeature();
   setActiveFeature(activeFeature);

@@ -98,7 +98,7 @@ const SNOOZE_OPTS = [5, 10, 15];
 
 function buildSelect(opts, current, key) {
   return `<select class="reminder-select" data-key="${key}" aria-label="${key}">
-    ${opts.map((v) => `<option value="${v}" ${v === current ? "selected" : ""}>${v} min</option>`).join("")}
+    ${opts.map((v) => `<option value="${v}" ${v === current ? "selected" : ""}>${t("settings.min", { n: v })}</option>`).join("")}
   </select>`;
 }
 
@@ -116,28 +116,28 @@ function renderIdle(container) {
           <rect x="42" y="56" width="8" height="18" rx="4" fill="currentColor" opacity=".2"/>
         </svg>
       </div>
-      <h2 class="reminder-heading">Stand Reminder</h2>
-      <p class="reminder-sub">Get nudged to stand up every ${_state?.intervalMinutes ?? 30} minutes.<br>Idle ≥ ${_state?.idleThresholdMinutes ?? 5} min auto-resets the timer.</p>
+      <h2 class="reminder-heading">${t("move.title")}</h2>
+      <p class="reminder-sub">${t("move.sub", { n: _state?.intervalMinutes ?? 30, idle: _state?.idleThresholdMinutes ?? 5 })}</p>
 
-      <button id="btn-enable-reminder" class="btn-primary reminder-enable-btn" aria-label="Enable stand reminder">
+      <button id="btn-enable-reminder" class="btn-primary reminder-enable-btn" aria-label="${t("move.start")}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16">
           <polygon points="5 3 19 12 5 21 5 3"/>
         </svg>
-        Start Reminder
+        ${t("move.start")}
       </button>
 
       <div class="reminder-settings">
-        <h3 class="settings-label">Settings</h3>
+        <h3 class="settings-label">${t("settings.label")}</h3>
         <div class="settings-row">
-          <span>Work interval</span>
+          <span>${t("settings.interval")}</span>
           ${buildSelect(INTERVAL_OPTS, _state?.intervalMinutes ?? 30, "intervalMinutes")}
         </div>
         <div class="settings-row">
-          <span>Idle reset</span>
+          <span>${t("settings.idle")}</span>
           ${buildSelect(IDLE_OPTS, _state?.idleThresholdMinutes ?? 5, "idleThresholdMinutes")}
         </div>
         <div class="settings-row">
-          <span>Snooze</span>
+          <span>${t("settings.snooze")}</span>
           ${buildSelect(SNOOZE_OPTS, _state?.snoozeMinutes ?? 10, "snoozeMinutes")}
         </div>
       </div>
@@ -178,22 +178,22 @@ function renderActive(container) {
       </div>
       <p class="timer-label">${
         remainSec <= 60
-          ? "Almost time to stand! 🚀"
+          ? t("timer.almost_stand")
           : remainSec <= 300
-            ? "Almost there, keep going!"
-            : "Stay focused — break coming"
+            ? t("timer.almost_there")
+            : t("timer.stay_focused")
       }</p>
 
       <div class="reminder-stats">
         <div class="stat-chip">
           ${PERSON_SVG}
-          <span><strong>${todayStands}</strong> stand${todayStands !== 1 ? "s" : ""} today</span>
+          <span>${t("stats.stands", { n: todayStands, s: todayStands !== 1 ? "s" : "" })}</span>
         </div>
         ${
           streak > 0
             ? `<div class="stat-chip stat-streak">
           ${FIRE_SVG}
-          <span><strong>${streak}</strong> day streak</span>
+          <span>${t("stats.streak", { n: streak })}</span>
         </div>`
             : ""
         }
@@ -206,27 +206,27 @@ function renderActive(container) {
               <circle cx="12" cy="12" r="3"/>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
             </svg>
-            Settings
+            ${t("settings.label")}
           </summary>
           <div class="settings-rows">
             <div class="settings-row">
-              <span>Work interval</span>
+              <span>${t("settings.interval")}</span>
               ${buildSelect(INTERVAL_OPTS, _state.intervalMinutes, "intervalMinutes")}
             </div>
             <div class="settings-row">
-              <span>Idle reset</span>
+              <span>${t("settings.idle")}</span>
               ${buildSelect(IDLE_OPTS, _state.idleThresholdMinutes, "idleThresholdMinutes")}
             </div>
             <div class="settings-row">
-              <span>Snooze</span>
+              <span>${t("settings.snooze")}</span>
               ${buildSelect(SNOOZE_OPTS, _state.snoozeMinutes, "snoozeMinutes")}
             </div>
           </div>
         </details>
       </div>
 
-      <button id="btn-disable-reminder" class="btn-ghost-sm" aria-label="Disable stand reminder">
-        Stop Reminder
+      <button id="btn-disable-reminder" class="btn-ghost-sm" aria-label="${t("move.stop")}">
+        ${t("move.stop")}
       </button>
     </div>
   `;
@@ -265,33 +265,33 @@ function renderBreakDue(container) {
         </svg>
       </div>
 
-      <h2 class="reminder-heading break-heading">Time to Stand Up!</h2>
-      <p class="reminder-sub">You've been sitting for <strong>${_state?.intervalMinutes ?? 30} minutes</strong>.<br>Take a quick stretch break!</p>
+      <h2 class="reminder-heading break-heading">${t("break.title")}</h2>
+      <p class="reminder-sub">${t("break.sub", { n: _state?.intervalMinutes ?? 30 })}</p>
 
       <div class="break-actions">
-        <button id="btn-move-done" class="break-btn btn-done" aria-label="I stood up">
+        <button id="btn-move-done" class="break-btn btn-done" aria-label="${t("break.done")}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          Done
+          ${t("break.done")}
         </button>
-        <button id="btn-move-snooze" class="break-btn btn-snooze" aria-label="Snooze 10 minutes">
+        <button id="btn-move-snooze" class="break-btn btn-snooze" aria-label="${t("break.snooze", { n: _state?.snoozeMinutes ?? 10 })}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16">
             <rect x="6" y="4" width="4" height="16" rx="1"/>
             <rect x="14" y="4" width="4" height="16" rx="1"/>
           </svg>
-          Snooze ${_state?.snoozeMinutes ?? 10}m
+          ${t("break.snooze", { n: _state?.snoozeMinutes ?? 10 })}
         </button>
-        <button id="btn-move-skip" class="break-btn btn-skip" aria-label="Skip this break">
+        <button id="btn-move-skip" class="break-btn btn-skip" aria-label="${t("break.skip")}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
             <polyline points="5 4 15 12 5 20"/>
             <line x1="19" y1="5" x2="19" y2="19"/>
           </svg>
-          Skip
+          ${t("break.skip")}
         </button>
       </div>
 
-      <p class="break-stat">Today: <strong>${_state?.stats?.todayStands ?? 0}</strong> stands completed</p>
+      <p class="break-stat">${t("break.stat", { n: _state?.stats?.todayStands ?? 0 })}</p>
     </div>
   `;
 
@@ -333,21 +333,21 @@ function renderSnoozed(container) {
             transform="rotate(-90 60 60)"/>
         </svg>
         <div class="timer-text">
-          <span class="timer-current snoozed-label">Snoozed</span>
-          <span class="timer-total">${_state?.snoozeMinutes ?? 10}m</span>
+          <span class="timer-current snoozed-label">${t("snoozed.label")}</span>
+          <span class="timer-total">${t("settings.min", { n: _state?.snoozeMinutes ?? 10 })}</span>
         </div>
       </div>
-      <p class="timer-label">Reminder will repeat in ${_state?.snoozeMinutes ?? 10} min</p>
+      <p class="timer-label">${t("snoozed.sub", { n: _state?.snoozeMinutes ?? 10 })}</p>
 
       <div class="break-actions">
-        <button id="btn-snoozed-done" class="break-btn btn-done" aria-label="I stood up">
+        <button id="btn-snoozed-done" class="break-btn btn-done" aria-label="${t("break.done")}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          Done
+          ${t("break.done")}
         </button>
-        <button id="btn-snoozed-skip" class="break-btn btn-skip" aria-label="Skip this break">
-          Skip
+        <button id="btn-snoozed-skip" class="break-btn btn-skip" aria-label="${t("break.skip")}">
+          ${t("break.skip")}
         </button>
       </div>
     </div>
@@ -357,14 +357,14 @@ function renderSnoozed(container) {
     .querySelector("#btn-snoozed-done")
     ?.addEventListener("click", async () => {
       await sendAction("done");
-      showToast("Great job! Timer reset 💪");
+      showToast(t("toast.timer_reset"));
       renderReminderView();
     });
   container
     .querySelector("#btn-snoozed-skip")
     ?.addEventListener("click", async () => {
       await sendAction("skip");
-      showToast("Skipped — timer reset");
+      showToast(t("toast.skipped"));
       renderReminderView();
     });
 }
@@ -447,10 +447,10 @@ function updateTimerDisplay() {
   if (label)
     label.textContent =
       remainSec <= 60
-        ? "Almost time to stand! 🚀"
+        ? t("timer.almost_stand")
         : remainSec <= 300
-          ? "Almost there, keep going!"
-          : "Stay focused — break coming";
+          ? t("timer.almost_there")
+          : t("timer.stay_focused");
 }
 
 // ── Background push listener ──────────────────────

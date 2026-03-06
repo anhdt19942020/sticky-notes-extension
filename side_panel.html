@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -60,7 +60,7 @@
             stroke-linecap="round"
           />
         </svg>
-        <h1 class="header-title">Sticky Notes</h1>
+        <h1 class="header-title" data-i18n="app.title">Ghi Chú</h1>
       </div>
       <div class="header-actions">
         <!-- Feature Switcher -->
@@ -86,7 +86,7 @@
               <line x1="6" y1="15" x2="10" y2="15" />
               <polygon points="16,3 19,3 19,6" />
             </svg>
-            Notes
+            <span data-i18n="feat.notes">Ghi Chú</span>
           </button>
           <button
             class="feat-btn"
@@ -107,16 +107,27 @@
               <path d="M12 7v5m0 0-3 4m3-4 3 4" />
               <path d="M9 11h6" />
             </svg>
-            Move
+            <span data-i18n="feat.move">Di Chuyển</span>
           </button>
         </div>
+
+        <!-- Lang Toggle -->
+        <button
+          id="btn-lang"
+          class="icon-btn lang-btn"
+          title="Switch language"
+          aria-label="Switch language"
+        >
+          EN
+        </button>
 
         <!-- Theme Toggle -->
         <button
           id="btn-theme"
           class="icon-btn"
-          title="Toggle theme"
-          aria-label="Toggle dark/light mode"
+          data-i18n-title="btn.theme"
+          data-i18n-label="btn.theme"
+          aria-label="Chuyển giao diện"
         >
           <svg
             id="icon-sun"
@@ -168,7 +179,7 @@
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          New
+          <span data-i18n="btn.new">Mới</span>
         </button>
       </div>
     </header>
@@ -194,8 +205,9 @@
             id="search-input"
             class="search-input"
             type="text"
-            placeholder="Search notes…"
-            aria-label="Search notes"
+            placeholder="Tìm ghi chú…"
+            data-i18n-ph="search.placeholder"
+            aria-label="Tìm ghi chú"
           />
           <button
             id="btn-clear-search"
@@ -225,10 +237,10 @@
           role="tab"
           aria-selected="true"
         >
-          All
+          <span data-i18n="tab.all">Tất Cả</span>
         </button>
         <button class="tab" data-tab="page" role="tab" aria-selected="false">
-          This Page
+          <span data-i18n="tab.page">Trang Này</span>
         </button>
         <button
           class="tab"
@@ -236,10 +248,10 @@
           role="tab"
           aria-selected="false"
         >
-          Favorites
+          <span data-i18n="tab.favorites">Yêu Thích</span>
         </button>
         <button class="tab" data-tab="archive" role="tab" aria-selected="false">
-          Archive
+          <span data-i18n="tab.archive">Lưu Trữ</span>
         </button>
       </nav>
 
@@ -446,8 +458,9 @@
           contenteditable="true"
           role="textbox"
           aria-multiline="true"
-          aria-label="Note content"
-          data-placeholder="Write your note here…"
+          data-i18n-ph="editor.content_ph"
+          aria-label="Nội dung ghi chú"
+          data-placeholder="Viết ghi chú của bạn…"
         ></div>
 
         <!-- Color picker + actions -->
@@ -555,8 +568,13 @@
                 <path d="M9 6V4h6v2" />
               </svg>
             </button>
-            <button id="btn-save" class="btn-primary" aria-label="Save note">
-              Save
+            <button
+              id="btn-save"
+              class="btn-primary"
+              data-i18n-label="editor.save"
+              aria-label="Lưu ghi chú"
+            >
+              <span data-i18n="editor.save">Lưu</span>
             </button>
           </div>
         </div>

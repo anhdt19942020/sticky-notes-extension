@@ -10,12 +10,13 @@ const STORAGE_KEY = "stickyNotes_v1";
 const THEME_KEY = "stickyNotes_theme";
 const FEATURE_KEY = "pp_activeFeature";
 const REMINDER_KEY = "pp_reminder";
+const LOCALE_KEY = "pp_locale";
 
 // ── DOM Helpers ──────────────────────────────────
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
-// ── Utilities ────────────────────────────────────
+// ── Utilities ─────────────────────────────────────
 const genId = () =>
   Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
@@ -43,16 +44,302 @@ const stripHtml = (html) => {
 const formatDate = (ts) => {
   const d = new Date(ts);
   const today = new Date();
+  const locale = _locale === "vi" ? "vi-VN" : "en-US";
   if (d.toDateString() === today.toDateString()) {
-    return d.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    return d.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" });
   }
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString(locale, { month: "short", day: "numeric" });
 };
 
-// ── Storage Abstraction ──────────────────────────
+// ══════════════════════════════════════════════════
+// I18N — Internationalization
+// ══════════════════════════════════════════════════
+
+let _locale = "vi"; // Default: Vietnamese
+
+const LOCALES = {
+  vi: {
+    // ── App ──
+    "app.title": "Ghi Chú",
+    "lang.toggle": "EN",
+
+    // ── Feature switcher ──
+    "feat.notes": "Ghi Chú",
+    "feat.move": "Di Chuyển",
+
+    // ── Header ──
+    "btn.new": "Mới",
+    "btn.theme": "Chuyển giao diện",
+
+    // ── Search ──
+    "search.placeholder": "Tìm ghi chú…",
+    "search.clear": "Xóa tìm kiếm",
+
+    // ── Tabs ──
+    "tab.all": "Tất Cả",
+    "tab.page": "Trang Này",
+    "tab.favorites": "Yêu Thích",
+    "tab.archive": "Lưu Trữ",
+
+    // ── Editor ──
+    "editor.title_ph": "Tiêu đề (tùy chọn)",
+    "editor.content_ph": "Viết ghi chú của bạn…",
+    "editor.save": "Lưu",
+    "editor.close": "Đóng trình soạn thảo",
+    "editor.delete": "Xóa ghi chú",
+    "editor.archive": "Lưu trữ ghi chú",
+    "editor.unarchive": "Bỏ lưu trữ",
+    "editor.favorite": "Đánh dấu yêu thích",
+    "editor.unfavorite": "Bỏ yêu thích",
+
+    // ── Empty states ──
+    "empty.all.title": "Chưa có ghi chú",
+    "empty.all.sub": "Nhấn <strong>Mới</strong> để tạo ghi chú đầu tiên",
+    "empty.page.title": "Chưa có ghi chú cho trang này",
+    "empty.page.sub": "Ghi chú gắn với trang này sẽ xuất hiện ở đây",
+    "empty.fav.title": "Chưa có ghi chú yêu thích",
+    "empty.fav.sub": "Đánh dấu ⭐ ghi chú để thêm vào Yêu Thích",
+    "empty.arc.title": "Kho lưu trữ trống",
+    "empty.arc.sub": "Ghi chú đã lưu trữ sẽ xuất hiện ở đây",
+    "empty.search.title": "Không tìm thấy kết quả",
+    "empty.search.sub": "Không có ghi chú nào khớp với",
+
+    // ── Toasts ──
+    "toast.saved": "Đã lưu ghi chú ✓",
+    "toast.updated": "Đã cập nhật ghi chú",
+    "toast.deleted": "Đã xóa ghi chú",
+    "toast.archived": "Đã lưu trữ ghi chú",
+    "toast.unarchived": "Đã bỏ lưu trữ",
+    "toast.write_first": "Hãy viết gì đó trước!",
+    "toast.timer_reset": "Làm tốt lắm! Đặt lại bộ đếm 💪",
+    "toast.skipped": "Đã bỏ qua — đặt lại bộ đếm",
+    "toast.snoozed": "Đã tạm hoãn {n} phút",
+
+    // ── Reminder — Idle ──
+    "move.title": "Nhắc Nhở Đứng Dậy",
+    "move.sub":
+      "Nhận nhắc nhở đứng dậy mỗi {n} phút.<br>Không hoạt động ≥ {idle} phút sẽ đặt lại bộ đếm.",
+    "move.start": "Bắt Đầu",
+    "move.stop": "Dừng Nhắc Nhở",
+
+    // ── Reminder — Active ──
+    "timer.almost_stand": "Gần đến giờ đứng dậy! 🚀",
+    "timer.almost_there": "Gần xong rồi, cố lên!",
+    "timer.stay_focused": "Tập trung thôi — sắp đến giờ nghỉ",
+
+    // ── Reminder — Break Due ──
+    "break.title": "Đến Lúc Đứng Dậy Rồi!",
+    "break.sub":
+      "Bạn đã ngồi <strong>{n} phút</strong> rồi.<br>Hãy vươn vai một chút nào!",
+    "break.done": "Xong rồi",
+    "break.snooze": "Hoãn {n}p",
+    "break.skip": "Bỏ Qua",
+    "break.stat": "Hôm nay: <strong>{n}</strong> lần đứng",
+
+    // ── Reminder — Snoozed ──
+    "snoozed.label": "Đã Hoãn",
+    "snoozed.sub": "Nhắc lại sau {n} phút",
+
+    // ── Stats ──
+    "stats.stands": "<strong>{n}</strong> lần đứng hôm nay",
+    "stats.streak": "<strong>{n}</strong> ngày liên tiếp",
+
+    // ── Settings ──
+    "settings.label": "Cài Đặt",
+    "settings.interval": "Khoảng thời gian",
+    "settings.idle": "Nghỉ tự động",
+    "settings.snooze": "Tạm hoãn",
+    "settings.min": "{n} phút",
+
+    // ── Note card ──
+    "note.untitled": "Chưa có tiêu đề",
+    "note.fav_add": "Thêm vào yêu thích",
+    "note.fav_remove": "Bỏ yêu thích",
+    "note.archived": "đã lưu trữ",
+  },
+
+  en: {
+    // ── App ──
+    "app.title": "Sticky Notes",
+    "lang.toggle": "VI",
+
+    // ── Feature switcher ──
+    "feat.notes": "Notes",
+    "feat.move": "Move",
+
+    // ── Header ──
+    "btn.new": "New",
+    "btn.theme": "Toggle theme",
+
+    // ── Search ──
+    "search.placeholder": "Search notes…",
+    "search.clear": "Clear search",
+
+    // ── Tabs ──
+    "tab.all": "All",
+    "tab.page": "This Page",
+    "tab.favorites": "Favorites",
+    "tab.archive": "Archive",
+
+    // ── Editor ──
+    "editor.title_ph": "Title (optional)",
+    "editor.content_ph": "Write your note here…",
+    "editor.save": "Save",
+    "editor.close": "Close editor",
+    "editor.delete": "Delete note",
+    "editor.archive": "Archive note",
+    "editor.unarchive": "Unarchive note",
+    "editor.favorite": "Add to favorites",
+    "editor.unfavorite": "Remove from favorites",
+
+    // ── Empty states ──
+    "empty.all.title": "No notes yet",
+    "empty.all.sub":
+      "Click <strong>New</strong> to create your first sticky note",
+    "empty.page.title": "No notes for this page",
+    "empty.page.sub": "Notes tagged to this URL will appear here",
+    "empty.fav.title": "No favorites yet",
+    "empty.fav.sub": "Star a note to add it to Favorites",
+    "empty.arc.title": "Archive is empty",
+    "empty.arc.sub": "Archived notes will appear here",
+    "empty.search.title": "No results found",
+    "empty.search.sub": "No notes match",
+
+    // ── Toasts ──
+    "toast.saved": "Note saved ✓",
+    "toast.updated": "Note updated",
+    "toast.deleted": "Note deleted",
+    "toast.archived": "Note archived",
+    "toast.unarchived": "Note unarchived",
+    "toast.write_first": "Write something first!",
+    "toast.timer_reset": "Great job! Timer reset 💪",
+    "toast.skipped": "Skipped — timer reset",
+    "toast.snoozed": "Snoozed for {n} min",
+
+    // ── Reminder — Idle ──
+    "move.title": "Stand Reminder",
+    "move.sub":
+      "Get nudged to stand up every {n} minutes.<br>Idle ≥ {idle} min auto-resets the timer.",
+    "move.start": "Start Reminder",
+    "move.stop": "Stop Reminder",
+
+    // ── Reminder — Active ──
+    "timer.almost_stand": "Almost time to stand! 🚀",
+    "timer.almost_there": "Almost there, keep going!",
+    "timer.stay_focused": "Stay focused — break coming",
+
+    // ── Reminder — Break Due ──
+    "break.title": "Time to Stand Up!",
+    "break.sub":
+      "You've been sitting for <strong>{n} minutes</strong>.<br>Take a quick stretch break!",
+    "break.done": "Done",
+    "break.snooze": "Snooze {n}m",
+    "break.skip": "Skip",
+    "break.stat": "Today: <strong>{n}</strong> stands completed",
+
+    // ── Reminder — Snoozed ──
+    "snoozed.label": "Snoozed",
+    "snoozed.sub": "Reminder will repeat in {n} min",
+
+    // ── Stats ──
+    "stats.stands": "<strong>{n}</strong> stand{s} today",
+    "stats.streak": "<strong>{n}</strong> day streak",
+
+    // ── Settings ──
+    "settings.label": "Settings",
+    "settings.interval": "Work interval",
+    "settings.idle": "Idle reset",
+    "settings.snooze": "Snooze",
+    "settings.min": "{n} min",
+
+    // ── Note card ──
+    "note.untitled": "Untitled",
+    "note.fav_add": "Add to favorites",
+    "note.fav_remove": "Remove from favorites",
+    "note.archived": "archived",
+  },
+};
+
+/**
+ * Translate a key with optional interpolation vars.
+ * t('toast.snoozed', { n: 10 }) → "Đã tạm hoãn 10 phút"
+ */
+function t(key, vars = {}) {
+  const dict = LOCALES[_locale] || LOCALES["vi"];
+  let str = dict[key] ?? LOCALES["vi"][key] ?? key;
+  // Interpolate {var} placeholders
+  str = str.replace(/\{(\w+)\}/g, (_, k) =>
+    vars[k] !== undefined ? vars[k] : "",
+  );
+  // Special: {s} for English plural suffix
+  if (_locale === "en" && vars.n !== undefined) {
+    str = str.replace(/\{s\}/g, vars.n !== 1 ? "s" : "");
+  } else {
+    str = str.replace(/\{s\}/g, "");
+  }
+  return str;
+}
+
+/** Apply all data-i18n attributes in the DOM */
+function applyI18n() {
+  // Text content
+  $$("[data-i18n]").forEach((el) => {
+    const key = el.dataset.i18n;
+    el.innerHTML = t(key);
+  });
+  // Placeholder attributes (inputs/selects)
+  $$("[data-i18n-ph]").forEach((el) => {
+    const val = t(el.dataset.i18nPh);
+    el.setAttribute("placeholder", val);
+    // Also update contenteditable data-placeholder
+    if (el.hasAttribute("data-placeholder")) {
+      el.setAttribute("data-placeholder", val);
+    }
+  });
+  // aria-label attributes
+  $$("[data-i18n-label]").forEach((el) => {
+    el.setAttribute("aria-label", t(el.dataset.i18nLabel));
+  });
+  // Title attributes
+  $$("[data-i18n-title]").forEach((el) => {
+    el.setAttribute("title", t(el.dataset.i18nTitle));
+  });
+  // Update lang toggle button label
+  const langBtn = $("#btn-lang");
+  if (langBtn) langBtn.textContent = t("lang.toggle");
+  // Update html lang attribute
+  document.documentElement.lang = _locale;
+}
+
+/** Load locale from storage */
+async function loadLocale() {
+  const data = await storageGet(LOCALE_KEY);
+  _locale = data[LOCALE_KEY] || "vi";
+  applyI18n();
+}
+
+/** Switch locale and persist */
+function setLocale(lang) {
+  _locale = lang;
+  storageSet({ [LOCALE_KEY]: lang });
+  applyI18n();
+  // Re-render reminder if visible
+  if (typeof window.initReminderView === "function") {
+    const section = $("#reminder-section");
+    if (section && !section.hidden) window.initReminderView();
+  }
+  // Re-render notes list (for note cards, empty state)
+  if (typeof window.renderNotesForLocale === "function") {
+    window.renderNotesForLocale();
+  }
+}
+
+/** Toggle between vi ↔ en */
+function toggleLocale() {
+  setLocale(_locale === "vi" ? "en" : "vi");
+}
+
+// ── Storage Abstraction ───────────────────────────
 function storageGet(keys) {
   return new Promise((resolve) => {
     if (typeof chrome !== "undefined" && chrome.storage) {
@@ -95,7 +382,7 @@ async function saveNotes(notes) {
   await storageSet({ [STORAGE_KEY]: notes });
 }
 
-// ── Theme ────────────────────────────────────────
+// ── Theme ─────────────────────────────────────────
 function applyTheme(mode) {
   document.body.classList.toggle("dark", mode === "dark");
   document.body.classList.toggle("light", mode !== "dark");
@@ -119,7 +406,7 @@ function toggleTheme() {
   applyTheme(isDark ? "light" : "dark");
 }
 
-// ── Toast ────────────────────────────────────────
+// ── Toast ─────────────────────────────────────────
 let _toastTimer;
 function showToast(msg) {
   const toast = $("#toast");
@@ -136,9 +423,7 @@ function showToast(msg) {
   }, 2200);
 }
 
-// ── Feature Router ───────────────────────────────
-const FEATURES = ["notes", "move"];
-
+// ── Feature Router ────────────────────────────────
 async function loadActiveFeature() {
   const data = await storageGet(FEATURE_KEY);
   return data[FEATURE_KEY] || "notes";
@@ -147,20 +432,17 @@ async function loadActiveFeature() {
 function setActiveFeature(feature) {
   storageSet({ [FEATURE_KEY]: feature });
 
-  // Update switcher buttons
   $$(".feat-btn").forEach((btn) => {
     const isActive = btn.dataset.feature === feature;
     btn.classList.toggle("active", isActive);
     btn.setAttribute("aria-selected", String(isActive));
   });
 
-  // Show/hide feature sections
   const notesSection = $("#notes-section");
   const reminderSection = $("#reminder-section");
   if (notesSection) notesSection.hidden = feature !== "notes";
   if (reminderSection) reminderSection.hidden = feature !== "move";
 
-  // Notify feature modules
   if (feature === "move" && typeof window.initReminderView === "function") {
     window.initReminderView();
   }

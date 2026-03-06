@@ -256,6 +256,31 @@ input,
   background: #450a0a;
 }
 
+/* ── Language Toggle ── */
+.lang-btn {
+  width: auto;
+  min-width: 32px;
+  padding: 0 var(--sp-xs);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--text-secondary);
+  transition: all var(--t-base);
+}
+.lang-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+  transform: scale(1.05);
+}
+.dark .lang-btn:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+
 /* ── Primary Button ── */
 .btn-primary {
   display: flex;

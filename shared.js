@@ -60,7 +60,7 @@ let _locale = "vi"; // Default: Vietnamese
 const LOCALES = {
   vi: {
     // ── App ──
-    "app.title": "Ghi Chú",
+    "app.title": "Perfect Ping",
     "lang.toggle": "EN",
 
     // ── Feature switcher ──
@@ -161,7 +161,7 @@ const LOCALES = {
 
   en: {
     // ── App ──
-    "app.title": "Sticky Notes",
+    "app.title": "Perfect Ping",
     "lang.toggle": "VI",
 
     // ── Feature switcher ──

@@ -430,6 +430,8 @@ function startPoll() {
 }
 
 // ── Lightweight timer-only update ─────────────────
+let _breakCheckSent = false; // prevent duplicate check_break messages
+
 function updateTimerDisplay() {
   if (!_state) return;
   const totalSec = _state.intervalMinutes * 60;
@@ -451,6 +453,14 @@ function updateTimerDisplay() {
         : remainSec <= 300
           ? t("timer.almost_there")
           : t("timer.stay_focused");
+
+  // Proactive break trigger — don't wait for imprecise chrome.alarms
+  if (remainSec <= 0 && !_breakCheckSent) {
+    _breakCheckSent = true;
+    sendAction("check_break");
+  } else if (remainSec > 0) {
+    _breakCheckSent = false;
+  }
 }
 
 // ── Background push listener ──────────────────────

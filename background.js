@@ -332,6 +332,16 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         }
         break;
 
+      case "check_break":
+        // UI detected remaining ≤ 0 → force immediate transition
+        if (
+          _reminder.state === "active" &&
+          elapsedMinutes() >= _reminder.intervalMinutes
+        ) {
+          await transitionTo("break_due");
+        }
+        break;
+
       case "update_settings":
         // value: { intervalMinutes?, idleThresholdMinutes?, snoozeMinutes? }
         Object.assign(_reminder, value);
